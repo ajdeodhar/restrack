@@ -1,0 +1,157 @@
+\documentclass[10pt, letterpaper]{article}
+
+% ── Packages ──────────────────────────────────────────────────────────────────
+\usepackage[top=0.35in, bottom=0.35in, left=0.7in, right=0.7in]{geometry}
+\usepackage{fontenc}
+\usepackage{inputenc}
+\usepackage{microtype}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{fontawesome5}
+\usepackage{mathptmx}
+
+\hypersetup{colorlinks=true, urlcolor=black, linkcolor=black}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+
+% ── Section header ─────────────────────────────────────────────────────────────
+\newcommand{\ressection}[1]{%
+  \vspace{5pt}%
+  {\fontsize{10pt}{11pt}\selectfont\textbf{\textsc{#1}}}%
+  \vspace{1pt}%
+  \hrule height 0.4pt%
+  \vspace{2pt}%
+}
+
+% ── Role / Project title row ───────────────────────────────────────────────────
+\newcommand{\rolerow}[2]{%
+  \vspace{4pt}%
+  \noindent\begin{tabularx}{\textwidth}{@{}X r@{}}
+    {\fontsize{9.5pt}{11pt}\selectfont\textbf{#1}} & {\fontsize{9.5pt}{11pt}\selectfont #2}
+  \end{tabularx}\vspace{0pt}%
+}
+
+% ── Company / subtitle line ────────────────────────────────────────────────────
+\newcommand{\companyline}[1]{%
+  \noindent{\fontsize{9.5pt}{11pt}\selectfont\textit{#1}}\vspace{1pt}%
+}
+
+% ── Em-dash bullet ─────────────────────────────────────────────────────────────
+\newenvironment{emdashlist}{%
+  \begin{list}{--}{%
+    \setlength{\leftmargin}{1.0em}%
+    \setlength{\itemsep}{0pt}%
+    \setlength{\parsep}{0pt}%
+    \setlength{\topsep}{1pt}%
+    \setlength{\labelsep}{0.35em}%
+    \fontsize{9.5pt}{11.5pt}\selectfont%
+  }%
+}{%
+  \end{list}%
+}
+
+% ── Skill line ─────────────────────────────────────────────────────────────────
+\newcommand{\skillline}[2]{%
+  \noindent{\fontsize{9.5pt}{11.5pt}\selectfont\textbf{#1} #2\par}%
+}
+
+% ──────────────────────────────────────────────────────────────────────────────
+\begin{document}
+\pagestyle{empty}
+
+% ── NAME ──────────────────────────────────────────────────────────────────────
+\begin{center}
+  {\fontsize{17pt}{19pt}\selectfont\textbf{Anshuman Deodhar}}\\[3pt]
+  {\fontsize{9.5pt}{11pt}\selectfont
+    Menlo Park, CA \textbar{} +1-(413) 472-6719 \textbar{} deodharanshu@gmail.com \\[2pt]
+    %\faGlobe\ \href{https://my-portfolio-seven-brown-26.vercel.app/}{My Portfolio}
+    \hspace{6pt}
+    \faLinkedin\ \href{https://www.linkedin.com/in/anshuman-deodhar-b22311200/}{LinkedIn}
+  }
+\end{center}
+
+\vspace{1pt}
+
+% ── SUMMARY ───────────────────────────────────────────────────────────────────
+\ressection{Summary}
+{\fontsize{9.5pt}{12pt}\selectfont
+Computer Engineering graduate with hands-on experience shipping production AI systems and optimization pipelines. Built systems currently deployed at Simulytics powering customer demos and live operations. Looking to design and deploy production AI solutions at scale.
+\par}
+
+% ── EDUCATION ─────────────────────────────────────────────────────────────────
+\ressection{Education}
+\rolerow{University of Massachusetts Amherst}{\textit{May 2026}}
+\companyline{Bachelor of Science in Computer Engineering}
+
+% ── TECHNICAL SKILLS ──────────────────────────────────────────────────────────
+\ressection{Technical Skills}
+\skillline{Languages:}{Python, SQL, MATLAB, R, Java, JavaScript, C/C++, HTML/CSS, Assembly, ARM}
+\skillline{Tools/Frameworks:}{Gurobi (MILP/LP), Tableau, MS Excel, YOLO, Git, UNIX/Linux, Plotly, Arduino Uno}
+\skillline{Concepts:}{Supply Chain Optimization, Operations Research, Mixed-Integer Linear Programming, Machine Learning, Data Analysis \& Visualization, Mathematical Modelling, Computer Vision, Agentic AI}
+
+% ── EXPERIENCE ────────────────────────────────────────────────────────────────
+\ressection{Experience}
+
+\rolerow{Software Engineer -- Supply Chain Optimization}{January 2026 -- March 2026}
+\companyline{Simulytics}
+\begin{emdashlist}
+  \item Built and deployed a hub-and-spoke distribution network using MILP in Gurobi to minimize transportation costs across plant, warehouse, and customer lanes; designed flow-conservation constraints for truck allocation and multi-tier logistics paths.
+  \item Automated optimization outputs: lane costs, truck counts, load assignments, to SQL tables for downstream reporting pipelines.
+\end{emdashlist}
+
+\rolerow{Product Management Intern}{May 2025 -- August 2025}
+\companyline{Simulytics}
+\begin{emdashlist}
+  \item Translated tyre industry client requirements into engineering problem statements; Deployed YOLO-based object detection for real-time warehouse compliance checks. System currently in production and used for customer demonstrations.
+  \item Supported edge deployment decisions for real-time inference pipelines, bridging product, engineering, and client stakeholders.
+\end{emdashlist}
+
+\rolerow{Data Analyst Intern}{June 2025 -- August 2025}
+\companyline{Ganit Inc.}
+\begin{emdashlist}
+  \item Analyzed supply chain networks using Python and Excel to surface vendor-wise cost and volume trends; quantified savings by comparing current vs.\ optimized logistics configurations.
+  \item Capstone: used Python, SQL, and Tableau to preprocess and visualize one year of FX data via the Frankfurter API for executive reporting.
+\end{emdashlist}
+
+\rolerow{Software Engineer Intern}{June 2021 -- September 2021}
+\companyline{Techlore}
+\begin{emdashlist}
+  \item Built a responsive web interface for a Logistics Network Optimizer (HTML/CSS/JS + Lindo API); formulated LP models for warehouse placement and route optimization, contributing to a 15--20\% reduction in logistics costs.
+\end{emdashlist}
+
+% ── PROJECTS ──────────────────────────────────────────────────────────────────
+\ressection{Projects}
+
+% % --- PROJECTS
+% \ressection{Projects}
+
+\rolerow{Flight Price Anomaly Detection Agent}{June 2026}
+\companyline{Agentic AI System \textbar{} Python, SQLite, Claude API, APScheduler}
+\begin{emdashlist}
+\item Built an agentic AI system that continuously monitors flight prices across cabin classes (economy vs premium economy) and autonomously detects when premium seats drop below economy prices, enabling users to capture savings.
+\item Implemented dual-source web scraper with fallback logic, SQLite persistence with deduplication, anomaly detection rules, and test data pipeline; demo mode runs continuous price checks every 1 minute with full debug logging.
+\item Integrated Claude API for real-time anomaly analysis, APScheduler for autonomous continuous execution without human intervention, and email alerting with savings percentage calculations; system observes price data, plans next actions, executes checks, and adapts based on outcomes.
+\item GitHub: https://github.com/ajdeodhar/flight-anomaly-agent
+\end{emdashlist}
+
+\rolerow{Adversarial Security of EEG-Based Brain-Computer Interfaces}{May 2026}
+\companyline{Machine Learning Security \textbar{} Solo Project \textbar{} PyTorch, MOABB, Adversarial ML}
+\begin{emdashlist}
+\item Built an end-to-end adversarial ML evaluation pipeline for an EEGNet motor-imagery classifier on the BCI Competition IV 2a dataset (9 subjects, 5184 trials); implemented four attack types spanning white-box (FGSM, PGD), black-box transfer, and signal-processing-level filter threat models.
+\item Trained an adversarially robust defended classifier; achieved 36.26\% accuracy under FGSM attack at $\epsilon$=0.10 vs 13.40\% for the undefended baseline, at only 1.1 pp clean accuracy cost and 2.50x training overhead with zero inference overhead.
+\end{emdashlist}
+
+% \rolerow{Diabetes Risk Prediction (Kaggle Competition)}{July 2025}
+% \companyline{Machine Learning Project}
+% \begin{emdashlist}
+%   \item Benchmarked Logistic Regression, Random Forest, XGBoost, and LightGBM on 100,000 patient records; improved ROC-AUC via class imbalance handling and hyperparameter tuning.
+% \end{emdashlist}
+
+% ── INTERESTS ─────────────────────────────────────────────────────────────────
+\ressection{Interests}
+{\fontsize{9.5pt}{12pt}\selectfont Indian Classical Music, Trekking, Marathon Running, Public Speaking\par}
+
+\end{document}
