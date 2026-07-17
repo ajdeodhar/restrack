@@ -12,9 +12,12 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.112.2",
+    "@codemirror/legacy-modes": "^6.5.3",
     "@next-auth/prisma-adapter": "^1.0.7",
     "@octokit/rest": "^20.1.1",
     "@prisma/client": "^5.22.0",
+    "@uiw/codemirror-theme-vscode": "^4.25.11",
+    "@uiw/react-codemirror": "^4.25.11",
     "lucide-react": "^0.400.0",
     "mammoth": "^1.8.0",
     "next": "^14.2.35",
