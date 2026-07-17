@@ -226,6 +226,77 @@ export async function importProfile(params: {
   return items;
 }
 
+/** Converts an uploaded PDF resume into an equivalent LaTeX source via Claude vision. */
+export async function generateLatexFromPdf(params: {
+  apiKey: string;
+  pdfBase64: string;
+}): Promise<string> {
+  const anthropic = new Anthropic({ apiKey: params.apiKey });
+
+  const message = await anthropic.messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 8192,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'document',
+            source: { type: 'base64', media_type: 'application/pdf', data: params.pdfBase64 },
+          },
+          {
+            type: 'text',
+            text: 'Analyze this resume PDF. Generate an equivalent LaTeX (.tex) file that reproduces its layout, section structure, and formatting as faithfully as possible. Return ONLY the .tex source code — no markdown code fences, no explanations.',
+          },
+        ],
+      },
+    ],
+  });
+
+  const textBlock = message.content.find((c) => c.type === 'text');
+  if (!textBlock || textBlock.type !== 'text') {
+    throw new Error('Claude did not return LaTeX source for this PDF.');
+  }
+
+  // Strip any stray markdown fences Claude might add despite instructions.
+  return textBlock.text
+    .trim()
+    .replace(/^```(?:latex|tex)?\n?/i, '')
+    .replace(/\n?```$/i, '')
+    .trim();
+}
+
+/** Generates a natural-language commit message for a resume version; falls back to a template on failure. */
+export async function generateCommitMessage(params: {
+  apiKey: string;
+  role: string;
+  company: string;
+  section: string;
+  changeDescription: string;
+}): Promise<string> {
+  const fallback = `[${params.company || 'Application'}] ${params.role || 'Role'}: ${params.changeDescription}`;
+  if (!params.apiKey) return fallback;
+
+  try {
+    const anthropic = new Anthropic({ apiKey: params.apiKey });
+    const message = await anthropic.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 128,
+      messages: [
+        {
+          role: 'user',
+          content: `Write a single-line, imperative-mood git commit message (no quotes, no trailing period) for a tailored resume version.\nRole: ${params.role}\nCompany: ${params.company}\nSection changed: ${params.section}\nChange description: ${params.changeDescription}`,
+        },
+      ],
+    });
+    const textBlock = message.content.find((c) => c.type === 'text');
+    const text = textBlock && textBlock.type === 'text' ? textBlock.text.trim() : '';
+    return text || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export function validateEdit(
   originalLatex: string,
   result: EditResult

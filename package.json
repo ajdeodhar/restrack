@@ -11,7 +11,7 @@
     "prestart": "prisma migrate deploy"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.27.0",
+    "@anthropic-ai/sdk": "^0.112.2",
     "@next-auth/prisma-adapter": "^1.0.7",
     "@octokit/rest": "^20.1.1",
     "@prisma/client": "^5.22.0",
