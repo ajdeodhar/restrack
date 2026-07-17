@@ -1,0 +1,130 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// --- NextAuth required models ---
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// --- App models ---
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+
+  // Billing / AI key model: "free" users supply their own Anthropic key,
+  // "paid" users use the app's shared server-side key.
+  plan               String  @default("free")
+  ownAnthropicApiKey String?
+
+  // Which GitHub repo/file this user's tailored resume lives in.
+  // Push/fetch auth itself comes from the GitHub OAuth session, not a stored token.
+  githubOwner   String?
+  githubRepo    String?
+  latexFilePath String  @default("resume.tex")
+  branch        String  @default("main")
+
+  accounts      Account[]
+  sessions      Session[]
+  profileItems  ProfileItem[]
+  applications  Application[]
+  importSources ImportSource[]
+}
+
+model ImportSource {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  kind          String   // 'file' | 'pasted_text'
+  fileName      String   // original filename, or 'Pasted text' for pasted sources
+  mimeType      String?  // e.g. 'application/pdf'; null for pasted_text
+  fileBytes     Bytes?   // raw original upload; null for pasted_text
+  extractedText String   // always populated -- parsed file text or the pasted text itself
+
+  uploadedAt    DateTime @default(now())
+
+  profileItems  ProfileItem[]
+
+  @@index([userId])
+  @@index([userId, fileName])
+}
+
+model ProfileItem {
+  id             String        @id @default(cuid())
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type           String
+  title          String
+  organization   String?
+  startDate      String?
+  endDate        String?
+  description    String
+  tagsJson       String        @default("[]")
+  createdAt      DateTime      @default(now())
+  sourceId       String?
+  source         ImportSource? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([sourceId])
+}
+
+model Application {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company        String
+  role           String
+  appliedAt      DateTime @default(now())
+  jobDescription String?
+  instruction    String
+  changesJson    String
+  commitHash     String?
+  commitUrl      String?
+  commitMessage  String?
+
+  @@index([userId])
+}

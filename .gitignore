@@ -1,0 +1,12 @@
+node_modules/
+.next/
+data/
+public/output/
+*.pdf
+.env.local
+.env
+*.db
+*.db-journal
+npm-cache/
+tsconfig.tsbuildinfo
+
