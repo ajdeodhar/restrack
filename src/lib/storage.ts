@@ -7,6 +7,7 @@ import type {
   Application,
   ImportSourceSummary,
   ImportSourceDetail,
+  ResumeDraft,
 } from '@/types';
 
 function toProfileItem(row: {
@@ -54,6 +55,36 @@ function toImportSourceSummary(row: {
     mimeType: row.mimeType ?? undefined,
     uploadedAt: row.uploadedAt.toISOString(),
     itemsFound: row._count.profileItems,
+  };
+}
+
+function toResumeDraft(row: {
+  id: string;
+  originalTex: string;
+  editedTex: string;
+  role: string;
+  company: string;
+  section: string;
+  changeDescription: string;
+  status: string;
+  commitHash: string | null;
+  commitUrl: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}): ResumeDraft {
+  return {
+    id: row.id,
+    originalTex: row.originalTex,
+    editedTex: row.editedTex,
+    role: row.role,
+    company: row.company,
+    section: row.section,
+    changeDescription: row.changeDescription,
+    status: row.status as ResumeDraft['status'],
+    commitHash: row.commitHash ?? undefined,
+    commitUrl: row.commitUrl ?? undefined,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
   };
 }
 
@@ -264,5 +295,48 @@ export const storage = {
     });
     if (!row || !row.fileBytes) return null;
     return { fileBytes: row.fileBytes, mimeType: row.mimeType ?? 'application/octet-stream', fileName: row.fileName };
+  },
+
+  async createResumeDraft(
+    userId: string,
+    data: { originalTex: string; editedTex: string }
+  ): Promise<ResumeDraft> {
+    const row = await prisma.resumeDraft.create({
+      data: { userId, originalTex: data.originalTex, editedTex: data.editedTex },
+    });
+    return toResumeDraft(row);
+  },
+
+  async getResumeDraft(userId: string, id: string): Promise<ResumeDraft | null> {
+    const row = await prisma.resumeDraft.findFirst({ where: { id, userId } });
+    return row ? toResumeDraft(row) : null;
+  },
+
+  async updateResumeDraft(
+    userId: string,
+    id: string,
+    data: Partial<Pick<ResumeDraft, 'editedTex' | 'role' | 'company' | 'section' | 'changeDescription'>>
+  ): Promise<void> {
+    await prisma.resumeDraft.updateMany({
+      where: { id, userId },
+      data: {
+        editedTex: data.editedTex,
+        role: data.role,
+        company: data.company,
+        section: data.section,
+        changeDescription: data.changeDescription,
+      },
+    });
+  },
+
+  async markResumeDraftCommitted(
+    userId: string,
+    id: string,
+    data: { commitHash: string; commitUrl: string }
+  ): Promise<void> {
+    await prisma.resumeDraft.updateMany({
+      where: { id, userId },
+      data: { status: 'committed', commitHash: data.commitHash, commitUrl: data.commitUrl },
+    });
   },
 };

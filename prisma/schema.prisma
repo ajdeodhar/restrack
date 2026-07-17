@@ -72,6 +72,7 @@ model User {
   profileItems  ProfileItem[]
   applications  Application[]
   importSources ImportSource[]
+  resumeDrafts  ResumeDraft[]
 }
 
 model ImportSource {
@@ -110,6 +111,28 @@ model ProfileItem {
 
   @@index([userId])
   @@index([sourceId])
+}
+
+model ResumeDraft {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  originalTex       String
+  editedTex         String
+  role              String   @default("")
+  company           String   @default("")
+  section           String   @default("")
+  changeDescription String   @default("")
+
+  status            String   @default("draft") // draft | committed
+  commitHash        String?
+  commitUrl         String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model Application {

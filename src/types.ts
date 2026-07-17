@@ -85,3 +85,20 @@ export interface Application {
   commitUrl?: string;
   commitMessage?: string;
 }
+
+export type ResumeDraftStatus = 'draft' | 'committed';
+
+export interface ResumeDraft {
+  id: string;
+  originalTex: string;
+  editedTex: string;
+  role: string;
+  company: string;
+  section: string;
+  changeDescription: string;
+  status: ResumeDraftStatus;
+  commitHash?: string;
+  commitUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+}
