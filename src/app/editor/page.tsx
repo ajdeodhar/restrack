@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   RefreshCw,
   Sparkles,
@@ -16,10 +17,12 @@ import {
 } from 'lucide-react';
 import DiffViewer from '@/components/DiffViewer';
 import LatexViewer from '@/components/LatexViewer';
+import FileUploadZone from '@/components/FileUploadZone';
 import { useToast } from '@/components/Toast';
 import type { EditResult } from '@/types';
 
 type Step = 'load' | 'edit' | 'review' | 'done';
+type LoadMode = 'github' | 'upload';
 
 interface PushResult {
   commitSha: string;
@@ -29,7 +32,11 @@ interface PushResult {
 
 export default function EditorPage() {
   const toast = useToast();
+  const router = useRouter();
   const [step, setStep] = useState<Step>('load');
+  const [loadMode, setLoadMode] = useState<LoadMode>('github');
+  const [repoLinked, setRepoLinked] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   // Context
   const [company, setCompany] = useState('');
@@ -42,6 +49,28 @@ export default function EditorPage() {
   const [latexSha, setLatexSha] = useState('');
   const [fetchError, setFetchError] = useState('');
   const [fetching, setFetching] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then((r) => r.json())
+      .then((data) => setRepoLinked(Boolean(data.settings?.githubOwner && data.settings?.githubRepo)));
+  }, []);
+
+  const uploadResume = async (file: File) => {
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch('/api/resume-drafts', { method: 'POST', body: formData });
+    const data = await res.json();
+    setUploading(false);
+
+    if (data.error) {
+      toast.error(data.error);
+      return;
+    }
+
+    router.push(`/editor/preview?draftId=${data.draftId}`);
+  };
 
   // Edit
   const [instruction, setInstruction] = useState('');
@@ -251,22 +280,54 @@ export default function EditorPage() {
         {/* Left Panel */}
         <div className="w-96 shrink-0 border-r border-slate-800 flex flex-col">
           {step === 'load' && (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-              <div className="w-12 h-12 bg-brand-500/15 border border-brand-500/30 rounded-xl flex items-center justify-center mb-4">
-                <GitCommit size={20} className="text-brand-300" />
+            <div className="flex-1 flex flex-col p-8">
+              <div className="flex gap-1 mb-6 p-1 bg-slate-900/60 rounded-lg self-center">
+                <button
+                  onClick={() => setLoadMode('github')}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                    loadMode === 'github' ? 'bg-brand-500 text-white' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  Fetch from GitHub
+                </button>
+                <button
+                  onClick={() => setLoadMode('upload')}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                    loadMode === 'upload' ? 'bg-brand-500 text-white' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  Upload Resume
+                </button>
               </div>
-              <h2 className="font-semibold text-slate-200 mb-1">Fetch Your Resume</h2>
-              <p className="text-slate-500 text-sm mb-6">
-                Load your LaTeX file from GitHub to begin editing.
-              </p>
-              <button onClick={fetchResume} disabled={fetching} className="btn-primary">
-                {fetching && <Loader2 size={14} className="animate-spin" />}
-                {fetching ? 'Fetching...' : 'Fetch from GitHub'}
-              </button>
-              {fetchError && (
-                <div className="mt-4 flex items-start gap-2 text-red-400 text-sm text-left">
-                  <AlertCircle size={14} className="shrink-0 mt-0.5" />
-                  {fetchError}
+
+              {loadMode === 'github' ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-center">
+                  <div className="w-12 h-12 bg-brand-500/15 border border-brand-500/30 rounded-xl flex items-center justify-center mb-4">
+                    <GitCommit size={20} className="text-brand-300" />
+                  </div>
+                  <h2 className="font-semibold text-slate-200 mb-1">Fetch Your Resume</h2>
+                  <p className="text-slate-500 text-sm mb-6">
+                    Load your LaTeX file from GitHub to begin editing.
+                  </p>
+                  <button onClick={fetchResume} disabled={fetching} className="btn-primary">
+                    {fetching && <Loader2 size={14} className="animate-spin" />}
+                    {fetching ? 'Fetching...' : 'Fetch from GitHub'}
+                  </button>
+                  {fetchError && (
+                    <div className="mt-4 flex items-start gap-2 text-red-400 text-sm text-left">
+                      <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                      {fetchError}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col justify-center">
+                  <h2 className="font-semibold text-slate-200 mb-1 text-center">Upload Resume</h2>
+                  <p className="text-slate-500 text-sm mb-6 text-center">
+                    Upload a .tex file, or a PDF for Claude to convert to LaTeX. You&apos;ll land on
+                    a live preview to review and edit before committing.
+                  </p>
+                  <FileUploadZone repoLinked={repoLinked} uploading={uploading} onUpload={uploadResume} />
                 </div>
               )}
             </div>
