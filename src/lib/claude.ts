@@ -196,6 +196,47 @@ EDIT REQUEST: ${params.instruction}`;
   return toolUse.input as EditResult;
 }
 
+/** Applies one targeted edit to a section of a LaTeX resume, returning the full edited .tex. */
+export async function generateEditedTex(params: {
+  apiKey: string;
+  latexContent: string;
+  role: string;
+  company: string;
+  section: string;
+  changeDescription: string;
+}): Promise<string> {
+  const anthropic = new Anthropic({ apiKey: params.apiKey });
+
+  const message = await anthropic.messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 16384,
+    messages: [
+      {
+        role: 'user',
+        content: `I am applying for ${params.role || 'a role'} at ${params.company || 'a company'}.
+
+Given this LaTeX resume:
+<latex>
+${params.latexContent}
+</latex>
+
+Apply the following edit: ${params.changeDescription}. Only edit the ${params.section} section — leave every other section untouched. Return ONLY the complete modified .tex file, no markdown code fences and no explanations.`,
+      },
+    ],
+  });
+
+  const textBlock = message.content.find((c) => c.type === 'text');
+  if (!textBlock || textBlock.type !== 'text') {
+    throw new Error('Claude did not return an edited resume. Try rephrasing your request.');
+  }
+
+  return textBlock.text
+    .trim()
+    .replace(/^```(?:latex|tex)?\n?/i, '')
+    .replace(/\n?```$/i, '')
+    .trim();
+}
+
 export async function importProfile(params: {
   apiKey: string;
   resumeText: string;
