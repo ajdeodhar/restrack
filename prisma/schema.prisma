@@ -129,6 +129,11 @@ model ResumeDraft {
   commitHash        String?
   commitUrl         String?
 
+  // Overleaf has no public OAuth/project API for third-party apps today, so these
+  // stay unpopulated placeholders until a Server Pro / Git-bridge integration exists.
+  overleafProjectId String?
+  overleafToken     String?
+
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
