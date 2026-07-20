@@ -11,6 +11,7 @@ import {
   AlertCircle,
   Plus,
   RotateCcw,
+  X,
 } from 'lucide-react';
 import LatexViewer from '@/components/LatexViewer';
 import { useToast } from '@/components/Toast';
@@ -22,6 +23,11 @@ const SECTIONS = ['Skills', 'Experience', 'Projects', 'Summary'];
 interface AppliedEdit {
   section: string;
   changeDescription: string;
+}
+
+interface SectionEdit {
+  section: string;
+  change_description: string;
 }
 
 interface SaveResult {
@@ -43,11 +49,20 @@ function DraftPageInner() {
   // Left panel — inputs
   const [role, setRole] = useState('');
   const [company, setCompany] = useState('');
-  const [section, setSection] = useState(SECTIONS[0]);
-  const [changeDescription, setChangeDescription] = useState('');
+  const [jobDescription, setJobDescription] = useState('');
+  const [sections, setSections] = useState<SectionEdit[]>([]);
   const [appliedEdits, setAppliedEdits] = useState<AppliedEdit[]>([]);
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState('');
+
+  const addSection = () => setSections((prev) => [...prev, { section: SECTIONS[0], change_description: '' }]);
+  const removeSection = (index: number) =>
+    setSections((prev) => prev.filter((_, i) => i !== index));
+  const updateSection = (index: number, field: keyof SectionEdit, value: string) =>
+    setSections((prev) => prev.map((s, i) => (i === index ? { ...s, [field]: value } : s)));
+
+  const canGenerate =
+    sections.length > 0 && sections.every((s) => s.section && s.change_description.trim());
 
   // Working tex + Overleaf hand-off
   const [currentTex, setCurrentTex] = useState('');
@@ -77,7 +92,7 @@ function DraftPageInner() {
   const hasEdits = appliedEdits.length > 0;
 
   const generateEdits = async () => {
-    if (!changeDescription.trim()) return;
+    if (!canGenerate) return;
     setGenerating(true);
     setGenerateError('');
 
@@ -88,8 +103,8 @@ function DraftPageInner() {
         original_tex: currentTex,
         role,
         company,
-        section,
-        change_description: changeDescription,
+        job_description: jobDescription || undefined,
+        sections,
       }),
     });
     const data = await res.json();
@@ -103,8 +118,11 @@ function DraftPageInner() {
 
     setCurrentTex(data.edited_tex);
     setFinalTex(data.edited_tex);
-    setAppliedEdits((prev) => [...prev, { section, changeDescription }]);
-    setChangeDescription('');
+    setAppliedEdits((prev) => [
+      ...prev,
+      ...sections.map((s) => ({ section: s.section, changeDescription: s.change_description })),
+    ]);
+    setSections([]);
   };
 
   const saveToRestrack = async () => {
@@ -207,7 +225,7 @@ function DraftPageInner() {
       <div className="w-full lg:w-[300px] shrink-0 border-b lg:border-b-0 lg:border-r border-slate-800 flex flex-col p-5 overflow-y-auto">
         <h2 className="text-sm font-semibold text-slate-200 mb-1">Resume Edit Inputs</h2>
         <p className="text-xs text-slate-500 mb-4">
-          Describe an edit, generate it, then repeat for as many changes as you need.
+          Add one or more sections to edit, then generate them all at once.
         </p>
 
         <div className="space-y-3">
@@ -225,24 +243,65 @@ function DraftPageInner() {
             />
           </div>
           <div>
-            <label className="field-label">Section</label>
-            <select className="input" value={section} onChange={(e) => setSection(e.target.value)}>
-              {SECTIONS.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="field-label">Change Description</label>
+            <label className="field-label">Job Description (optional)</label>
             <textarea
-              rows={5}
+              rows={4}
               className="textarea"
-              placeholder="e.g. Add Python and Rust skills for backend role"
-              value={changeDescription}
-              onChange={(e) => setChangeDescription(e.target.value)}
+              placeholder="Paste the job description to help tailor the edits"
+              value={jobDescription}
+              onChange={(e) => setJobDescription(e.target.value)}
             />
+          </div>
+
+          <div className="pt-2">
+            <p className="field-label mb-2">Sections to Edit</p>
+
+            {sections.length === 0 && (
+              <p className="text-xs text-slate-600 mb-2">No sections added yet.</p>
+            )}
+
+            <div className="space-y-3">
+              {sections.map((s, i) => (
+                <div key={i} className="card p-3 relative space-y-2">
+                  <button
+                    onClick={() => removeSection(i)}
+                    className="absolute top-2 right-2 text-slate-500 hover:text-red-400"
+                    aria-label="Remove section"
+                  >
+                    <X size={14} />
+                  </button>
+                  <div>
+                    <label className="field-label">Section</label>
+                    <select
+                      className="input"
+                      value={s.section}
+                      onChange={(e) => updateSection(i, 'section', e.target.value)}
+                    >
+                      {SECTIONS.map((opt) => (
+                        <option key={opt} value={opt}>
+                          {opt}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="field-label">Change Description</label>
+                    <textarea
+                      rows={3}
+                      className="textarea"
+                      placeholder="e.g. Add Python and Rust skills for backend role"
+                      value={s.change_description}
+                      onChange={(e) => updateSection(i, 'change_description', e.target.value)}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button onClick={addSection} className="btn-secondary btn-sm w-full mt-2">
+              <Plus size={12} />
+              Add Another Section
+            </button>
           </div>
 
           {generateError && (
@@ -254,7 +313,7 @@ function DraftPageInner() {
 
           <button
             onClick={generateEdits}
-            disabled={generating || !changeDescription.trim()}
+            disabled={generating || !canGenerate}
             className="btn-primary w-full"
           >
             {generating ? (
