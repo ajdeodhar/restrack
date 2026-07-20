@@ -7,16 +7,21 @@ export async function POST(req: Request) {
   const auth = await getAuthedUser();
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { original_tex, role, company, section, change_description } = (await req.json()) as {
+  const { original_tex, role, company, job_description, sections } = (await req.json()) as {
     original_tex?: string;
     role?: string;
     company?: string;
-    section?: string;
-    change_description?: string;
+    job_description?: string;
+    sections?: { section?: string; change_description?: string }[];
   };
 
-  if (!original_tex || !change_description) {
-    return NextResponse.json({ error: 'original_tex and change_description are required' }, { status: 400 });
+  if (!original_tex || !sections || sections.length === 0) {
+    return NextResponse.json({ error: 'original_tex and at least one section edit are required' }, { status: 400 });
+  }
+
+  const invalidSection = sections.find((s) => !s.section || !s.change_description);
+  if (invalidSection) {
+    return NextResponse.json({ error: 'Each section edit needs a section and a change description' }, { status: 400 });
   }
 
   const apiKey = await storage.getEffectiveAnthropicKey(auth.userId);
@@ -30,8 +35,11 @@ export async function POST(req: Request) {
       latexContent: original_tex,
       role: role ?? '',
       company: company ?? '',
-      section: section ?? '',
-      changeDescription: change_description,
+      jobDescription: job_description,
+      sections: sections.map((s) => ({
+        section: s.section as string,
+        changeDescription: s.change_description as string,
+      })),
     });
     return NextResponse.json({ edited_tex });
   } catch (err: unknown) {
