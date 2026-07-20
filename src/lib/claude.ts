@@ -196,16 +196,21 @@ EDIT REQUEST: ${params.instruction}`;
   return toolUse.input as EditResult;
 }
 
-/** Applies one targeted edit to a section of a LaTeX resume, returning the full edited .tex. */
+/** Applies one or more targeted section edits to a LaTeX resume in a single pass, returning the full edited .tex. */
 export async function generateEditedTex(params: {
   apiKey: string;
   latexContent: string;
   role: string;
   company: string;
-  section: string;
-  changeDescription: string;
+  jobDescription?: string;
+  sections: { section: string; changeDescription: string }[];
 }): Promise<string> {
   const anthropic = new Anthropic({ apiKey: params.apiKey });
+
+  const editsList = params.sections
+    .map((s) => `Edit ${s.section}: ${s.changeDescription}`)
+    .join('\n');
+  const editedSectionNames = params.sections.map((s) => s.section).join(', ');
 
   const message = await anthropic.messages.create({
     model: 'claude-sonnet-4-6',
@@ -220,7 +225,10 @@ Given this LaTeX resume:
 ${params.latexContent}
 </latex>
 
-Apply the following edit: ${params.changeDescription}. Only edit the ${params.section} section — leave every other section untouched. Return ONLY the complete modified .tex file, no markdown code fences and no explanations.`,
+${params.jobDescription ? `Job description:\n${params.jobDescription}\n\n` : ''}Apply ALL of the following edits:
+${editsList}
+
+Only modify the specified sections (${editedSectionNames}) — preserve all other sections unchanged. Return ONLY the complete modified .tex file with ALL edits applied, no markdown code fences and no explanations.`,
       },
     ],
   });
